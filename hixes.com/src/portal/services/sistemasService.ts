@@ -1,9 +1,9 @@
-import { axiosWithoutMultipart } from '../../api/axiosInstance';
+import { axiosAuth } from '../../api/axiosInstance';
 import type { MisSistemasResponse } from '../../core/components/auth/schemas/login.interface';
 
 export const getMisSistemas = async (): Promise<MisSistemasResponse> => {
     try {
-        const response = await axiosWithoutMultipart.get<MisSistemasResponse>('auth/mis-sistemas');
+        const response = await axiosAuth.get<MisSistemasResponse>('auth/mis-sistemas');
         return response.data;
     } catch (error: any) {
         console.error('Error al obtener sistemas:', error);

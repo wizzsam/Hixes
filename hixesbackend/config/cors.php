@@ -20,7 +20,8 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://erp.hexiswellnesscenter.com',
+        'https://erp.hexiswellnesscenter.com',          
+        'http://erp.hexiswellnesscenter.com',
         'http://localhost:3000',
         'http://localhost:5173',
     ],

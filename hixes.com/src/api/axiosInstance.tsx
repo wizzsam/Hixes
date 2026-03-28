@@ -1,4 +1,5 @@
 import axios from 'axios';
+import type { InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = import.meta.env.VITE_API_URL as string;
 export const STORAGE_URL = import.meta.env.VITE_STORAGE_URL as string;
@@ -17,6 +18,14 @@ export const axiosWithoutMultipart = axios.create({
 	},
 });
 
+// Instancia ESPECÍFICA para rutas de autenticación (SIN X-Sede-Id)
+export const axiosAuth = axios.create({
+	baseURL: API_URL,
+	headers: {
+		'Content-Type': 'application/json',
+	},
+});
+
 // Instancia para estudiantes (usa estudiante_token)
 export const axiosEstudiante = axios.create({
 	baseURL: API_URL,
@@ -27,25 +36,40 @@ export const axiosEstudiante = axios.create({
 
 // Interceptor para admin (authToken)
 axiosInstance.interceptors.request.use(
-    (config) => {
+    (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('authToken');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
+    (error: any) => {
         return Promise.reject(error);
     }
 );
 
-// Interceptor para admin (authToken) - sin multipart
-axiosWithoutMultipart.interceptors.request.use(
-    (config) => {
+// Interceptor para AUTH - SIN X-Sede-Id
+axiosAuth.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('authToken');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
+        return config;
+    },
+    (error: any) => {
+        return Promise.reject(error);
+    }
+);
+
+// Interceptor para admin (authToken) - sin multipart - CON X-Sede-Id
+axiosWithoutMultipart.interceptors.request.use(
+    (config: InternalAxiosRequestConfig) => {
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            config.headers['Authorization'] = `Bearer ${token}`;
+        }
+        
         const sedeActivaRaw = localStorage.getItem('sedeActiva');
         if (sedeActivaRaw) {
             try {
@@ -57,21 +81,21 @@ axiosWithoutMultipart.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
+    (error: any) => {
         return Promise.reject(error);
     }
 );
 
 // Interceptor para estudiantes (estudiante_token)
 axiosEstudiante.interceptors.request.use(
-    (config) => {
+    (config: InternalAxiosRequestConfig) => {
         const token = localStorage.getItem('estudiante_token');
         if (token) {
             config.headers['Authorization'] = `Bearer ${token}`;
         }
         return config;
     },
-    (error) => {
+    (error: any) => {
         return Promise.reject(error);
     }
 );
@@ -106,6 +130,11 @@ axiosInstance.interceptors.response.use(
 	handleUnauthorized
 );
 
+axiosAuth.interceptors.response.use(
+	(response) => response,
+	handleUnauthorized
+);
+
 axiosWithoutMultipart.interceptors.response.use(
 	(response) => response,
 	handleUnauthorized
@@ -115,4 +144,5 @@ axiosEstudiante.interceptors.response.use(
 	(response) => response,
 	handleUnauthorized
 );
+
 

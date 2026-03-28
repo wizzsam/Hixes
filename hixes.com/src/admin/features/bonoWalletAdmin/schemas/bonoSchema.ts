@@ -19,7 +19,7 @@ export const bonoWalletSchema = z.object({
   empresa_ids: z
     .array(z.number())
     .min(1, "Debe seleccionar al menos una empresa"),
-}).refine((data) => {
+}).refine((data: any) => {
   if (data.monto_maximo !== null && data.monto_maximo !== undefined) {
     return data.monto_maximo > data.monto_minimo;
   }

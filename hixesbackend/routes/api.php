@@ -15,7 +15,7 @@ use App\Http\Controllers\ServicioController;
 // 1. Manejar solicitudes OPTIONS para CORS (Se queda al inicio)
 Route::options('{any}', function () {
     return response('', 200)
-        ->header('Access-Control-Allow-Origin', 'http://localhost:3000, http://localhost:5173')
+        ->header('Access-Control-Allow-Origin', 'http://localhost:3000, http://localhost:5173, https://erp.hexiswellnesscenter.com, http://erp.hexiswellnesscenter.com')
         ->header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS')
         ->header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, X-CSRF-TOKEN')
         ->header('Access-Control-Allow-Credentials', 'true')
