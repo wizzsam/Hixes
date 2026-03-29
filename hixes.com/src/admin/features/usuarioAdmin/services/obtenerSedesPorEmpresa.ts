@@ -1,4 +1,4 @@
-import { axiosWithoutMultipart } from '../../../../api/axiosInstance';
+import { axiosAuth } from '../../../../api/axiosInstance';
 
 export interface SedeSimple {
     id: number;
@@ -8,7 +8,7 @@ export interface SedeSimple {
 
 export const obtenerSedesPorEmpresa = async (empresaId: number): Promise<SedeSimple[]> => {
     try {
-        const response = await axiosWithoutMultipart.get<{ success: boolean; data: SedeSimple[] }>('sedes', {
+        const response = await axiosAuth.get<{ success: boolean; data: SedeSimple[] }>('sedes', {
             params: { empresa_id: empresaId },
         });
         if (response.data.success) {
