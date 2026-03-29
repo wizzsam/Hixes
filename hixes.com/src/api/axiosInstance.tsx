@@ -26,14 +26,6 @@ export const axiosAuth = axios.create({
 	},
 });
 
-// Instancia para estudiantes (usa estudiante_token)
-export const axiosEstudiante = axios.create({
-	baseURL: API_URL,
-	headers: {
-		'Content-Type': 'application/json',
-	},
-});
-
 // Interceptor para admin (authToken)
 axiosInstance.interceptors.request.use(
     (config: InternalAxiosRequestConfig) => {
@@ -86,38 +78,13 @@ axiosWithoutMultipart.interceptors.request.use(
     }
 );
 
-// Interceptor para estudiantes (estudiante_token)
-axiosEstudiante.interceptors.request.use(
-    (config: InternalAxiosRequestConfig) => {
-        const token = localStorage.getItem('estudiante_token');
-        if (token) {
-            config.headers['Authorization'] = `Bearer ${token}`;
-        }
-        return config;
-    },
-    (error: any) => {
-        return Promise.reject(error);
-    }
-);
-
 // Interceptor para manejar respuestas con errores 401 (no autorizado)
 const handleUnauthorized = (error: any) => {
 	// Evitamos que el interceptor actúe (cerrando sesión) si el 401 viene de un intento de Login
 	const isLoginRequest = error.config && error.config.url && error.config.url.includes('login');
 
 	if (error.response?.status === 401 && !isLoginRequest) {
-		// Detectar si es token de admin o estudiante
-		const estudianteToken = localStorage.getItem('estudiante_token');
-		
-		if (estudianteToken) {
-			// Token de estudiante expirado
-			localStorage.removeItem('estudiante_token');
-		} else {
-			// Token de admin expirado
-			localStorage.removeItem('authToken');
-		}
-		
-		// Redirigir al login si no estamos ya ahí
+		localStorage.removeItem('authToken');
 		if (!window.location.pathname.includes('/login')) {
 			window.location.href = '/login';
 		}
@@ -136,11 +103,6 @@ axiosAuth.interceptors.response.use(
 );
 
 axiosWithoutMultipart.interceptors.response.use(
-	(response) => response,
-	handleUnauthorized
-);
-
-axiosEstudiante.interceptors.response.use(
 	(response) => response,
 	handleUnauthorized
 );

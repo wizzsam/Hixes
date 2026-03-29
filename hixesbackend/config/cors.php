@@ -28,7 +28,14 @@ return [
 
     'allowed_origins_patterns' => [],
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => [
+    'Content-Type',
+    'Authorization',
+    'Accept',
+    'X-Requested-With',
+    'x-sede-id',        // 👈 el header que te está fallando
+    'Origin',
+],
 
     'exposed_headers' => [],
 

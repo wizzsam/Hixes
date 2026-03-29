@@ -1,12 +1,8 @@
 import { Edit, Plus, Search, Trash2, Wallet, Loader2 } from "lucide-react"
 import { useState, useMemo } from "react"
 import { toast } from "sonner"
-
-// Hooks y Servicios reales
 import { useBonos } from "../hooks/useBonos"
 import { eliminarBono } from "../services/eliminarBono"
-
-// Componentes
 import CrearBonoModal from "../components/ModalBonoCrear"
 import EditarBonoModal from "../components/EditarBonoModal"
 
