@@ -24,7 +24,8 @@ class Usuarios extends Authenticatable implements JWTSubject
         'nombre_completo',
         'correo',
         'password',
-        'estado'
+        'estado',
+        'sesion_activa',
     ];
 
     protected $hidden = [
@@ -34,8 +35,9 @@ class Usuarios extends Authenticatable implements JWTSubject
     protected function casts(): array
     {
         return [
-            'password' => 'hashed',
-            'estado' => 'boolean',
+            'password'      => 'hashed',
+            'estado'        => 'boolean',
+            'sesion_activa' => 'boolean',
         ];
     }
 
@@ -70,6 +72,11 @@ class Usuarios extends Authenticatable implements JWTSubject
         return $this->belongsTo(Roles::class, 'rol_id', 'id');
     }
 
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Roles::class, 'usuario_roles', 'usuario_id', 'rol_id');
+    }
+
     public function empresa(): BelongsTo
     {
         return $this->belongsTo(Empresa::class, 'empresa_id', 'id');
@@ -83,5 +90,10 @@ class Usuarios extends Authenticatable implements JWTSubject
     public function sedes(): BelongsToMany
     {
         return $this->belongsToMany(Sede::class, 'usuario_sede', 'usuario_id', 'sede_id');
+    }
+
+    public function asignacionesChat()
+    {
+        return $this->hasMany(CrmAsignacionChat::class, 'vendedor_id', 'id_usuario');
     }
 }

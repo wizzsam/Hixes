@@ -3,7 +3,7 @@ import { useState, useMemo, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, CreditCard, DollarSign, Clock, ClipboardList, 
-  RefreshCw, BarChart2, Calendar, Filter, ArrowDownCircle, ChevronDown, ChevronUp, MessageCircle, MapPin
+  RefreshCw, BarChart2, Calendar, Filter, ArrowDownCircle, ChevronDown, ChevronUp, MessageCircle, MapPin, StarOff, Megaphone
 } from 'lucide-react';
 
 import RegistrarConsumoModal from './components/RegistrarConsumoModal';
@@ -11,6 +11,7 @@ import RecargarWalletModal from './components/RecargarWalletModal';
 import InfoNivelesModal from './components/InfoNivelesModal';
 import ResumenMensajeModal from './components/ResumenMensajeModal';
 import ResumenWalletModal from './components/ResumenWalletModal';
+import AsociarCampanaModal from './components/AsociarCampanaModal';
 
 import { useClientes } from './hooks/useClientes';
 import { useNiveles } from './hooks/useNiveles';
@@ -47,6 +48,7 @@ export const ClienteDetallePage = () => {
     registrarConsumo,
     recargarWallet,
     pagarConSaldo,
+    deshabilitarBeneficios,
   } = useClientes(Number(id));
 
   const { niveles, isLoading: loadingNiveles, getNivelActual, getSiguienteNivel } = useNiveles();
@@ -55,6 +57,8 @@ export const ClienteDetallePage = () => {
   const [modalConsumo, setModalConsumo]       = useState(false);
   const [modalWallet,  setModalWallet]        = useState(false);
   const [modalNiveles, setModalNiveles]         = useState(false);
+  const [modalCampana, setModalCampana]       = useState(false);
+  const [deshabilitando, setDeshabilitando]     = useState(false);
   const [expandirCashback, setExpandirCashback] = useState(false);
   const [txResumen,    setTxResumen]          = useState<{ servicio: string; monto: number; walletUsado?: number; cashbackUsado?: number } | null>(null);
   const [walletResumen, setWalletResumen] = useState<{ montoRecargado: number; montoTotal: number; porcentajeBono: number; montoBono: number } | null>(null);
@@ -189,9 +193,31 @@ export const ClienteDetallePage = () => {
             <p className="text-sm text-slate-500">DNI: {cliente.dni} · Tel: {cliente.telefono}</p>
           </div>
         </div>
-        <div className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-200">
-          <span className="text-lg">{nivelActual.icono}</span>
-          <span className="text-xs font-black uppercase tracking-widest">{nivelActual.nombre}</span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={async () => {
+              if (!confirm('¿Deshabilitar beneficios? El historial se conserva y el cliente volverá a Clientes General.')) return;
+              setDeshabilitando(true);
+              try {
+                await deshabilitarBeneficios(cliente.id);
+                navigate(`/trabajador/clientes-general/${cliente.id}`);
+              } finally {
+                setDeshabilitando(false);
+              }
+            }}
+            disabled={deshabilitando}
+            className="inline-flex items-center gap-2 px-3 py-2 text-xs font-bold text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl transition-colors disabled:opacity-50"
+          >
+            {deshabilitando
+              ? <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              : <StarOff className="w-3.5 h-3.5" />
+            }
+            Deshabilitar beneficios
+          </button>
+          <div className="flex items-center gap-2 px-4 py-2 bg-slate-900 text-white rounded-xl shadow-lg shadow-slate-200">
+            <span className="text-lg">{nivelActual.icono}</span>
+            <span className="text-xs font-black uppercase tracking-widest">{nivelActual.nombre}</span>
+          </div>
         </div>
       </div>
 
@@ -276,7 +302,7 @@ export const ClienteDetallePage = () => {
             Este cliente está inactivo. No se pueden registrar operaciones hasta que sea reactivado.
           </div>
         )}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           <button
             onClick={() => setModalConsumo(true)}
             disabled={!cliente.estado}
@@ -310,6 +336,15 @@ export const ClienteDetallePage = () => {
           >
             <MessageCircle className="w-6 h-6 text-green-500 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-bold text-green-700">Recordatorio</span>
+          </button>
+
+          <button
+            onClick={() => setModalCampana(true)}
+            disabled={!cliente.estado}
+            className="flex flex-col items-center gap-2 p-4 rounded-xl border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50 transition-all group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:border-slate-200 disabled:hover:bg-white"
+          >
+            <Megaphone className="w-6 h-6 text-indigo-500 group-hover:scale-110 transition-transform" />
+            <span className="text-xs font-bold text-indigo-700">Campaña</span>
           </button>
         </div>
       </div>
@@ -563,6 +598,12 @@ export const ClienteDetallePage = () => {
           montoBono={walletResumen.montoBono}
         />
       )}
+      <AsociarCampanaModal
+        isOpen={modalCampana}
+        clienteId={cliente.id}
+        clienteNombre={cliente.nombre_completo}
+        onClose={() => setModalCampana(false)}
+      />
     </div>
   );
 };

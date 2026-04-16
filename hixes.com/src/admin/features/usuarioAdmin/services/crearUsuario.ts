@@ -1,10 +1,10 @@
-import { axiosWithoutMultipart } from '../../../../api/axiosInstance';
+import { axiosAuth } from '../../../../api/axiosInstance';
 import type { UsuarioFormValues } from '../schemas/usuarioSchemas';
 import type { Usuario } from '../schemas/usuario.interface';
 
 export const crearUsuario = async (data: UsuarioFormValues): Promise<Usuario | null> => {
     try {
-        const response = await axiosWithoutMultipart.post<{success: boolean, data: Usuario}>('usuarios', data);
+        const response = await axiosAuth.post<{success: boolean, data: Usuario}>('usuarios', data);
         if (response.data.success) {
             return response.data.data;
         }

@@ -23,6 +23,11 @@ return new class extends Migration
         Schema::table('transacciones', function (Blueprint $table) {
             $table->dropColumn(['vence_at', 'expirado']);
         });
+
+        // Convertir valores que ya no existirán en el enum reducido
+        // para evitar el error 1265 (Data truncated) de MySQL
+        DB::statement("UPDATE transacciones SET tipo = 'consumo' WHERE tipo IN ('cashback','cashback_expirado','wallet_expirado')");
+
         DB::statement("ALTER TABLE transacciones MODIFY COLUMN tipo ENUM('consumo','recarga_wallet','pago_saldo') NOT NULL");
     }
 };

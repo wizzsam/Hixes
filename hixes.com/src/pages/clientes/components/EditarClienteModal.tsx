@@ -1,13 +1,13 @@
 import { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, User, CreditCard, Phone, Mail, Save, Loader2 } from 'lucide-react';
+import { X, User, CreditCard, Phone, Mail, Briefcase, Save, Loader2 } from 'lucide-react';
 import type { Cliente } from '../schemas/cliente.interface';
 
 interface EditarClienteModalProps {
   isOpen: boolean;
   onClose: () => void;
   cliente: Cliente | null;
-  onActualizar: (id: number, data: { nombre_completo: string; dni: string; telefono: string; correo?: string }) => Promise<any>;
+  onActualizar: (id: number, data: { nombre_completo: string; dni: string; telefono: string; correo?: string; empresa?: string }) => Promise<any>;
 }
 
 interface ClienteForm {
@@ -15,10 +15,11 @@ interface ClienteForm {
   dni: string;
   telefono: string;
   correo: string;
+  empresa: string;
 }
 
 export default function EditarClienteModal({ isOpen, onClose, cliente, onActualizar }: EditarClienteModalProps) {
-  const [form, setForm] = useState<ClienteForm>({ nombre_completo: '', dni: '', telefono: '', correo: '' });
+  const [form, setForm] = useState<ClienteForm>({ nombre_completo: '', dni: '', telefono: '', correo: '', empresa: '' });
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<Partial<ClienteForm>>({});
 
@@ -29,6 +30,7 @@ export default function EditarClienteModal({ isOpen, onClose, cliente, onActuali
         dni: cliente.dni,
         telefono: cliente.telefono,
         correo: cliente.correo ?? '',
+        empresa: cliente.empresa ?? '',
       });
       setErrors({});
     }
@@ -39,7 +41,7 @@ export default function EditarClienteModal({ isOpen, onClose, cliente, onActuali
     if (!form.nombre_completo.trim()) newErrors.nombre_completo = 'El nombre es obligatorio.';
     if (!/^\d{8}$/.test(form.dni)) newErrors.dni = 'El DNI debe tener exactamente 8 dígitos.';
     if (!/^\d{9}$/.test(form.telefono)) newErrors.telefono = 'El teléfono debe tener exactamente 9 dígitos.';
-    if (form.correo && !/^[^\s@]+@gmail\.com$/i.test(form.correo)) newErrors.correo = 'Ingresa un correo Gmail válido (@gmail.com).';
+    if (form.correo && !/^[^\s@]+@gmail\.com$/i.test(form.correo)) newErrors.correo = 'Ingresa un correo Gmail válido (@gmail.com)';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -65,6 +67,7 @@ export default function EditarClienteModal({ isOpen, onClose, cliente, onActuali
         dni: form.dni,
         telefono: form.telefono,
         correo: form.correo.trim() || undefined,
+        empresa: form.empresa.trim() || undefined,
       });
       handleClose();
     } finally {
@@ -158,6 +161,22 @@ export default function EditarClienteModal({ isOpen, onClose, cliente, onActuali
                       />
                     </div>
                     {errors.correo ? <p className="mt-1 text-xs text-red-500">{errors.correo}</p> : <p className="mt-1 text-xs text-slate-400">Solo cuentas @gmail.com</p>}
+                  </div>
+
+                  {/* Empresa (opcional) */}
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                      Empresa <span className="text-slate-400 font-normal">(opcional)</span>
+                    </label>
+                    <div className="relative">
+                      <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                        <Briefcase className="w-4 h-4 text-slate-400" />
+                      </div>
+                      <input type="text" name="empresa" value={form.empresa} onChange={handleChange}
+                        placeholder="Empresa donde trabaja"
+                        className="w-full pl-9 pr-4 py-2.5 text-sm border border-slate-300 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-400"
+                      />
+                    </div>
                   </div>
 
                   {/* Footer */}

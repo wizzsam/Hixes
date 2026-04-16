@@ -1,7 +1,7 @@
 import axios from 'axios';
 import type { InternalAxiosRequestConfig } from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL as string;
+const API_URL = "http://localhost:8000/api";
 export const STORAGE_URL = import.meta.env.VITE_STORAGE_URL as string;
 
 export const axiosInstance = axios.create({

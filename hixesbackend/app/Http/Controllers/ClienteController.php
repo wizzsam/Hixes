@@ -118,17 +118,41 @@ class ClienteController extends Controller
             'dni'             => 'required|digits:8|unique:clientes,dni,NULL,id,empresa_id,' . $user->empresa_id,
             'telefono'        => 'required|digits:9',
             'correo'          => 'nullable|email|max:255',
+            'empresa'         => 'nullable|string|max:255',
         ], [
             'dni.unique' => 'Ya existe un cliente registrado con ese DNI en esta empresa.',
         ]);
 
-        $validated = $request->only(['nombre_completo', 'dni', 'telefono', 'correo']);
-        $validated['empresa_id'] = $user->empresa_id;
-        $validated['sede_id']    = $sedeId;
+        $validated = $request->only(['nombre_completo', 'dni', 'telefono', 'correo', 'empresa']);
+        $validated['empresa_id']    = $user->empresa_id;
+        $validated['sede_id']       = $sedeId;
+        $validated['con_beneficios'] = $request->boolean('con_beneficios', false);
 
         $cliente = Cliente::with('sede')->find(Cliente::create($validated)->id);
 
         return response()->json($cliente, 201);
+    }
+
+    public function habilitarBeneficios($id)
+    {
+        $user = auth('api')->user();
+        $cliente = Cliente::where('empresa_id', $user->empresa_id)->findOrFail($id);
+
+        $cliente->con_beneficios = true;
+        $cliente->save();
+
+        return response()->json($cliente->fresh()->load('sede'));
+    }
+
+    public function deshabilitarBeneficios($id)
+    {
+        $user = auth('api')->user();
+        $cliente = Cliente::where('empresa_id', $user->empresa_id)->findOrFail($id);
+
+        $cliente->con_beneficios = false;
+        $cliente->save();
+
+        return response()->json($cliente->fresh()->load('sede'));
     }
 
     public function registroPublico(Request $request)
@@ -202,6 +226,7 @@ class ClienteController extends Controller
 
         $cliente->wallet += $montoTotal;
         $cliente->wallet_vence = Carbon::now()->addMonths(12);
+        $cliente->wallet_recordatorio_at = null;
         $cliente->save();
 
         Transaccion::create([
@@ -229,12 +254,18 @@ class ClienteController extends Controller
 
         $monto = (float)$request->monto;
 
-        $nivelObj = $this->getNivelObj($user->empresa_id, $cliente->consumo_acumulado);
-        $cashbackGanado = round(($monto * $nivelObj->cashback_porcentaje) / 100, 2);
-
         $cliente->consumo_acumulado += $monto;
-        $cliente->cashback           += $cashbackGanado;  // acumula, no reemplaza
-        $cliente->cashback_vence      = Carbon::now()->addDays($nivelObj->vigencia_dias);
+
+        // Solo generar cashback si el cliente tiene beneficios habilitados
+        $cashbackGanado = 0;
+        if ($cliente->con_beneficios) {
+            $nivelObj = $this->getNivelObj($user->empresa_id, $cliente->consumo_acumulado);
+            $cashbackGanado = round(($monto * $nivelObj->cashback_porcentaje) / 100, 2);
+
+            $cliente->cashback       += $cashbackGanado;
+            $cliente->cashback_vence  = Carbon::now()->addDays($nivelObj->vigencia_dias);
+        }
+
         $cliente->save();
 
         Transaccion::create([
@@ -269,9 +300,10 @@ class ClienteController extends Controller
             'dni'             => 'required|digits:8',
             'telefono'        => 'required|digits:9',
             'correo'          => 'nullable|email|max:255',
+            'empresa'         => 'nullable|string|max:255',
         ]);
 
-        $cliente->update($request->only(['nombre_completo', 'dni', 'telefono', 'correo']));
+        $cliente->update($request->only(['nombre_completo', 'dni', 'telefono', 'correo', 'empresa']));
 
         return response()->json($cliente->fresh(['sede']));
     }
@@ -349,6 +381,8 @@ class ClienteController extends Controller
         if ($cashbackGenerado > 0) {
             $cliente->cashback       += $cashbackGenerado;
             $cliente->cashback_vence  = Carbon::now()->addDays($nivelObj->vigencia_dias);
+            // Resetear recordatorio para que se envíe en la nueva ventana de vencimiento
+            $cliente->cashback_recordatorio_at = null;
         }
 
         $cliente->save();

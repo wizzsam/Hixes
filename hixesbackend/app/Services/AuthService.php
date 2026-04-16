@@ -13,14 +13,23 @@ class AuthService
             'estado'   => 1
         ];
 
-        if (!$token = auth('api')->attempt($credenciales)) {
+        /** @var \Tymon\JWTAuth\JWTGuard $guard */
+        $guard = auth('api');
+
+        if (!$token = $guard->attempt($credenciales)) {
             return [
                 'success' => false,
                 'message' => 'Credenciales inválidas o cuenta inactiva'
             ];
         }
 
-        $user = auth('api')->user()->load(['rol', 'empresa', 'sede']);
+        /** @var \App\Models\Usuarios $user */
+        $user = $guard->user();
+        $user->load(['rol', 'empresa', 'sede', 'roles']);
+
+        // Marcar vendedor como disponible al iniciar sesión
+        $user->sesion_activa = true;
+        $user->save();
 
         return [
             'success' => true,
@@ -34,6 +43,7 @@ class AuthService
                 'nombre_empresa'  => $user->empresa->nombre_comercial ?? null,
                 'sede_id'         => $user->sede_id,
                 'nombre_sede'     => $user->sede->nombre_sede ?? null,
+                'roles'           => $user->roles->map(fn($r) => ['id' => $r->id, 'nombre_rol' => $r->nombre_rol])->toArray(),
             ],
             'token' => $token
         ];
@@ -41,7 +51,18 @@ class AuthService
 
     public function cerrarSesion(): array
     {
-        auth('api')->logout();
+        /** @var \Tymon\JWTAuth\JWTGuard $guard */
+        $guard = auth('api');
+        /** @var \App\Models\Usuarios|null $user */
+        $user = $guard->user();
+
+        // Marcar vendedor como no disponible al cerrar sesión
+        if ($user) {
+            $user->sesion_activa = false;
+            $user->save();
+        }
+
+        $guard->logout();
 
         return [
             'success' => true,

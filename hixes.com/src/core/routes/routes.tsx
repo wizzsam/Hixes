@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { Navigate } from 'react-router-dom';
 import { LazyWrapper } from './components/LazyWrapper';
 import { ProtectedRoute } from './guard/ProtectedRoute';
+import { ModuleGuard } from './guard/ModuleGuard';
 import { AdminLayout } from '../../layout/components/AdminLayout';
 
 // Lazy loading de las páginas principales
@@ -37,14 +38,42 @@ import ('../../admin/features/nivelesAdmin/pages/NivelesAdmin').then((module) =>
 const ServicioHixesAdmin = lazy(() =>
 import ('../../admin/features/serviciosHixesAdmin/pages/ServiciosHixesAdmin').then((module) => ({default: module.default}))
 );
+const PipelinesAdmin = lazy(() =>
+  import('../../admin/features/kanbamAdmin/page/KanbamPage').then((module) => ({ default: module.default }))
+);
+const RecordatoriosCashbackAdmin = lazy(() =>
+  import('../../admin/features/recordatoriosCashbackAdmin/pages/RecordatoriosCashbackAdmin').then((module) => ({ default: module.default }))
+);
+const CampanasAdmin = lazy(() =>
+  import('../../admin/features/campanasAdmin/pages/CampanasAdmin').then((module) => ({ default: module.default }))
+);
 // Lazy loading de las páginas del trabajador
 const TrabajadorDashboard = lazy(() => import('../../pages/dashboard/DashboardPage').then(module => ({ default: module.DashboardPage })));
 const TrabajadorClientes = lazy(() => import('../../pages/clientes/ClientesPage').then(module => ({ default: module.ClientesPage })));
+const TrabajadorClientesGeneral = lazy(() => import('../../pages/clientes/ClientesGeneralPage').then(module => ({ default: module.ClientesGeneralPage })));
 const TrabajadorClienteDetalle = lazy(() => import('../../pages/clientes/ClienteDetallePage').then(module => ({ default: module.ClienteDetallePage })));
-
+const TrabajadorClienteGeneralDetalle = lazy(() => import('../../pages/clientes/ClienteGeneralDetallePage').then(module => ({ default: module.ClienteGeneralDetallePage })));
 const TrabajadorLayoutComponent = lazy(() =>
   import('../../layout/components/TrabajadorLayout').then((module) => ({ default: module.TrabajadorLayout }))
 );
+const CrmPage = lazy(() =>
+  import('../../pages/crm/pages/CrmPage').then((module) => ({ default: module.default }))
+);
+
+const KanbamPage = lazy(() =>
+  import('../../pages/kanbam/pages/KanbamPage').then((module) => ({ default: module.default }))
+);
+const CampanasListPage = lazy(() =>
+  import('../../pages/campanas/pages/CampanasListPage').then((module) => ({ default: module.default }))
+);
+const CampanaKanbanPage = lazy(() =>
+  import('../../pages/campanas/pages/CampanaKanbanPage').then((module) => ({ default: module.default }))
+);
+
+const CalendarioPage = lazy(() =>
+  import('../../pages/kanbam/pages/CalendarioPage').then((module) => ({ default: module.default }))
+);
+
 
 // Portal de selección de sistemas (post-login trabajador)
 const PortalPage = lazy(() =>
@@ -76,7 +105,7 @@ export const routes = [
   {
     path: '/portal',
     element: (
-      <ProtectedRoute allowedRoles={['TRABAJADOR', 'ADMIN_EMPRESA']}>
+      <ProtectedRoute allowedRoles={['TRABAJADOR', 'ADMIN_EMPRESA', 'VENTAS']}>
         <LazyWrapper>
           <PortalPage />
         </LazyWrapper>
@@ -88,7 +117,7 @@ export const routes = [
   {
     path: '/trabajador',
     element: (
-      <ProtectedRoute allowedRoles={['TRABAJADOR', 'ADMIN_EMPRESA']}>
+      <ProtectedRoute allowedRoles={['TRABAJADOR', 'ADMIN_EMPRESA', 'VENTAS']}>
         <LazyWrapper>
            <TrabajadorLayoutComponent />
         </LazyWrapper>
@@ -110,13 +139,94 @@ export const routes = [
       {
         path: 'clientes',
         element: (
-          <LazyWrapper>
-             <TrabajadorClientes />
-          </LazyWrapper>
+          <ModuleGuard requiredRoles={['ADMIN_EMPRESA']}>
+            <LazyWrapper>
+               <TrabajadorClientes />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path: 'clientes-general',
+        element: (
+          <ModuleGuard requiredRoles={['ADMIN_EMPRESA']}>
+            <LazyWrapper>
+              <TrabajadorClientesGeneral />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path: 'clientes-general/:id',
+        element: (
+          <ModuleGuard requiredRoles={['ADMIN_EMPRESA']}>
+            <LazyWrapper>
+              <TrabajadorClienteGeneralDetalle />
+            </LazyWrapper>
+          </ModuleGuard>
         )
       },
       {
         path: 'clientes/:id',
+        element: (
+          <ModuleGuard requiredRoles={['ADMIN_EMPRESA']}>
+            <LazyWrapper>
+              <TrabajadorClienteDetalle />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path:'crm',
+         element: (
+          <ModuleGuard requiredRoles={['VENTAS']}>
+            <LazyWrapper>
+               <CrmPage />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path: 'kanbam',
+        element: (
+          <ModuleGuard requiredRoles={['VENTAS']}>
+            <LazyWrapper>
+              <KanbamPage />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path: 'campanas',
+        element: (
+          <ModuleGuard requiredRoles={['VENTAS']}>
+            <LazyWrapper>
+              <CampanasListPage />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path: 'campanas/:id',
+        element: (
+          <ModuleGuard requiredRoles={['VENTAS']}>
+            <LazyWrapper>
+              <CampanaKanbanPage />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
+        path: 'calendario',
+        element: (
+          <ModuleGuard requiredRoles={['VENTAS']}>
+            <LazyWrapper>
+              <CalendarioPage />
+            </LazyWrapper>
+          </ModuleGuard>
+        )
+      },
+      {
         element: (
           <LazyWrapper>
              <TrabajadorClienteDetalle />
@@ -198,7 +308,31 @@ export const routes = [
             <ServicioHixesAdmin/>
           </LazyWrapper>
         )
-      }
+      },
+      {
+        path: 'pipelines',
+        element: (
+          <LazyWrapper>
+            <PipelinesAdmin />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'recordatorios-cashback',
+        element: (
+          <LazyWrapper>
+            <RecordatoriosCashbackAdmin />
+          </LazyWrapper>
+        ),
+      },
+      {
+        path: 'campanas',
+        element: (
+          <LazyWrapper>
+            <CampanasAdmin />
+          </LazyWrapper>
+        ),
+      },
     ],
   },
 

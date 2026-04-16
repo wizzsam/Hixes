@@ -18,9 +18,11 @@ export interface Cliente {
   dni: string;
   telefono: string;
   correo?: string;
+  empresa?: string;
   sede_id?: number;
   sede?: { id: number; nombre_sede: string };
   estado: boolean;
+  con_beneficios?: boolean;
   wallet: number;       // saldo recargable
   wallet_vence?: string;
   cashback: number;     // saldo cashback acumulado

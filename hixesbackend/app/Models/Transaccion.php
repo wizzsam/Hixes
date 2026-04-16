@@ -20,13 +20,15 @@ class Transaccion extends Model
         'vence_at',
         'expirado',
         'consumido',
+        'recordatorio_at',
     ];
 
     protected $casts = [
-        'monto'    => 'decimal:2',
-        'vence_at' => 'datetime',
-        'expirado' => 'boolean',
-        'consumido' => 'boolean',
+        'monto'           => 'decimal:2',
+        'vence_at'        => 'datetime',
+        'recordatorio_at' => 'datetime',
+        'expirado'        => 'boolean',
+        'consumido'       => 'boolean',
     ];
 
     public function cliente()

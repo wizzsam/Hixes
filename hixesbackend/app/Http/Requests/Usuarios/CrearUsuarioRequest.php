@@ -14,7 +14,8 @@ class CrearUsuarioRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rol_id'          => 'required|integer|exists:roles,id',
+            'rol_ids'         => 'required|array|min:1',
+            'rol_ids.*'       => 'integer|exists:roles,id',
             'nombre_completo' => 'required|string|max:255',
             'correo'          => 'required|email|max:255|unique:usuarios,correo',
             'password'        => 'required|string|min:6',
@@ -28,12 +29,13 @@ class CrearUsuarioRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'correo.required' => 'El correo es obligatorio.',
-            'correo.email' => 'El correo debe ser válido.',
-            'correo.unique' => 'Este correo ya está registrado en el sistema.',
-            'rol_id.required' => 'El rol es obligatorio.',
-            'rol_id.exists' => 'El rol seleccionado no es válido.',
-            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'correo.required'  => 'El correo es obligatorio.',
+            'correo.email'     => 'El correo debe ser válido.',
+            'correo.unique'    => 'Este correo ya está registrado en el sistema.',
+            'rol_ids.required' => 'Debe asignar al menos un rol.',
+            'rol_ids.min'      => 'Debe asignar al menos un rol.',
+            'rol_ids.*.exists' => 'Uno de los roles seleccionados no es válido.',
+            'empresa_id.exists'=> 'La empresa seleccionada no es válida.',
         ];
     }
 }

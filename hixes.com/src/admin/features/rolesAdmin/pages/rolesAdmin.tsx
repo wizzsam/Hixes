@@ -1,4 +1,4 @@
-import { Edit, Plus, Search, Trash2, ShieldCheck, Info, Loader2 } from "lucide-react"
+import { Search, ShieldCheck, Info, Loader2 } from "lucide-react"
 import { useState, useMemo } from "react"
 import CrearRolModal from "../components/crearRolModal"
 import EditarRolModal from "../components/editarRolModal"
@@ -14,7 +14,7 @@ export default function RolesAdmin() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [rolToEdit, setRolToEdit] = useState<RolInput | null>(null);
 
-  const { roles, isLoading, fetchRoles, eliminarRol } = useRolesAdmin();
+  const { roles, isLoading, fetchRoles, } = useRolesAdmin();
 
   const handleRolCreado = () => {
     fetchRoles();
@@ -40,17 +40,17 @@ export default function RolesAdmin() {
     setCurrentPage(1);
   };
 
-  const handleEdit = (id: number) => {
-    const rol = roles.find(r => r.id === id);
-    if (rol) {
-      setRolToEdit({
-        id: rol.id,
-        nombre_rol: rol.nombre_rol,
-        descripcion: rol.descripcion || "",
-      });
-      setIsEditModalOpen(true);
-    }
-  }
+  // const handleEdit = (id: number) => {
+  //   const rol = roles.find(r => r.id === id);
+  //   if (rol) {
+  //     setRolToEdit({
+  //       id: rol.id,
+  //       nombre_rol: rol.nombre_rol,
+  //       descripcion: rol.descripcion || "",
+  //     });
+  //     setIsEditModalOpen(true);
+  //   }
+  // }
 
   // Handle page changes
   const goToPage = (page: number) => {
@@ -74,13 +74,13 @@ export default function RolesAdmin() {
                 <p className="mt-1 text-slate-600">Define los niveles de acceso y permisos del sistema</p>
               </div>
             </div>
-            <button
+            {/* <button
               className="flex items-center px-4 py-2 space-x-2 text-white transition-colors bg-[#132436] rounded-lg shadow-sm hover:bg-[#224666]"
               onClick={() => setIsModalOpen(true)}
             >
               <Plus className="w-4 h-4" />
               <span>Nuevo Rol</span>
-            </button>
+            </button> */}
           </div>
         </div>
 
@@ -141,7 +141,7 @@ export default function RolesAdmin() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center space-x-1">
+                      {/* <div className="flex items-center space-x-1">
                         <button
                           onClick={() => handleEdit(rol.id)}
                           className="p-2 transition-colors rounded-lg text-slate-400 hover:text-emerald-600 hover:bg-emerald-50"
@@ -156,7 +156,7 @@ export default function RolesAdmin() {
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
-                      </div>
+                      </div> */}
                     </td>
                   </tr>
                 ))

@@ -1,10 +1,10 @@
-import { axiosWithoutMultipart } from '../../../../api/axiosInstance';
+import { axiosAuth } from '../../../../api/axiosInstance';
 import type { UsuarioFormValues } from '../schemas/usuarioSchemas';
 import type { Usuario } from '../schemas/usuario.interface';
 
 export const actualizarUsuario = async (id: number, data: Partial<UsuarioFormValues>): Promise<Usuario | null> => {
     try {
-        const response = await axiosWithoutMultipart.patch<{success: boolean, data: Usuario}>(`usuarios/${id}`, data);
+        const response = await axiosAuth.patch<{success: boolean, data: Usuario}>(`usuarios/${id}`, data);
         if (response.data.success) {
             return response.data.data;
         }

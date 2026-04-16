@@ -10,6 +10,7 @@ const normalizarCliente = (c: any): Cliente => ({
   cashback: parseFloat(c.cashback ?? 0),
   consumo_acumulado: parseFloat(c.consumo_acumulado ?? 0),
   estado: c.estado === undefined ? true : Boolean(c.estado),
+  con_beneficios: c.con_beneficios === undefined ? true : Boolean(c.con_beneficios),
 });
 
 const normalizarTransaccion = (tx: any): Transaccion => ({
@@ -75,6 +76,8 @@ export const useClientes = (clienteId?: number) => {
         dni: cliente.dni,
         telefono: cliente.telefono,
         correo: cliente.correo || undefined,
+        empresa: cliente.empresa || undefined,
+        con_beneficios: cliente.con_beneficios ?? false,
       });
       setClientes(prev => [...prev, normalizarCliente(nuevo)]);
       toast.success('Cliente registrado exitosamente');
@@ -85,7 +88,7 @@ export const useClientes = (clienteId?: number) => {
     }
   };
 
-  const actualizarCliente = async (id: number, data: { nombre_completo: string; dni: string; telefono: string; correo?: string }) => {
+  const actualizarCliente = async (id: number, data: { nombre_completo: string; dni: string; telefono: string; correo?: string; empresa?: string }) => {
     try {
       const actualizado = await clientesService.actualizarCliente(id, data);
       const norm = normalizarCliente(actualizado);
@@ -149,6 +152,33 @@ export const useClientes = (clienteId?: number) => {
     }
   };
 
+  const habilitarBeneficios = async (id: number) => {
+    try {
+      const actualizado = await clientesService.habilitarBeneficios(id);
+      const norm = normalizarCliente(actualizado);
+      setClientes(prev => prev.map(c => c.id === id ? norm : c));
+      toast.success('Beneficios habilitados. El cliente ahora aparece en Cashback & Wallet.');
+      return norm;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al habilitar beneficios');
+      throw error;
+    }
+  };
+
+  const deshabilitarBeneficios = async (id: number) => {
+    try {
+      const actualizado = await clientesService.deshabilitarBeneficios(id);
+      const norm = normalizarCliente(actualizado);
+      setClientes(prev => prev.map(c => c.id === id ? norm : c));
+      if (clienteId === id) setClienteDetalle(norm);
+      toast.success('Beneficios deshabilitados. El cliente vuelve a Clientes General.');
+      return norm;
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Error al deshabilitar beneficios');
+      throw error;
+    }
+  };
+
   return {
     clientes,
     clienteDetalle,
@@ -162,5 +192,7 @@ export const useClientes = (clienteId?: number) => {
     recargarWallet,
     pagarConSaldo,
     toggleEstado,
+    habilitarBeneficios,
+    deshabilitarBeneficios,
   };
 };

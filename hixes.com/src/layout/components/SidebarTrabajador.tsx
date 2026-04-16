@@ -1,11 +1,42 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight, User } from 'lucide-react';
 import { menuItemsTrabajador, type MenuItem, type SubMenuItem } from '../context/items-sidebar-trabajador';
+import { getUserRoles } from '../../core/utils/roles';
+import { axiosWithoutMultipart } from '../../api/axiosInstance';
 
 export const SidebarTrabajador = () => {
   const location = useLocation();
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
+  const userRoles = getUserRoles();
+
+  // ── Sesión activa (disponible como vendedor) ───────────────────────────────
+  const [sesionActiva, setSesionActiva] = useState<boolean>(false);
+  const esVendedor = userRoles.includes('VENTAS') || userRoles.includes('ADMIN_EMPRESA');
+
+  useEffect(() => {
+    if (!esVendedor) return;
+    axiosWithoutMultipart.get('/vendedor/sesion')
+      .then(({ data }) => setSesionActiva(!!data.sesion_activa))
+      .catch(() => { /* no crítico */ });
+  }, [esVendedor]);
+
+  const toggleSesion = async () => {
+    const nuevo = !sesionActiva;
+    setSesionActiva(nuevo); // Optimistic
+    try {
+      await axiosWithoutMultipart.post('/vendedor/sesion', { sesion_activa: nuevo });
+    } catch {
+      setSesionActiva(!nuevo); // Revert
+    }
+  };
+
+  const puedeVerItem = (item: MenuItem): boolean => {
+    if (!item.roles || item.roles.length === 0) return true;
+    return item.roles.some(r => userRoles.includes(r));
+  };
+
+  const visibleItems = menuItemsTrabajador.filter(puedeVerItem);
 
   const toggleExpand = (titulo: string) => {
     setExpandedItems(prev =>
@@ -18,7 +49,7 @@ export const SidebarTrabajador = () => {
   const isItemActive = (item: MenuItem | SubMenuItem): boolean => {
     if ('link' in item && item.link) {
       if (location.pathname === item.link) return true;
-      if (item.link !== '/' && location.pathname.startsWith(item.link)) return true;
+      if (item.link !== '/' && location.pathname.startsWith(item.link + '/')) return true;
       return false;
     }
     if ('subMenu' in item && item.subMenu) {
@@ -49,7 +80,7 @@ export const SidebarTrabajador = () => {
       {/* Menú de Navegación */}
       <nav className="flex-1 overflow-y-auto px-5 py-8 custom-scrollbar">
         <ul className="space-y-4">
-          {menuItemsTrabajador.map((item) => (
+          {visibleItems.map((item) => (
             <li key={item.titulo}>
               {item.link ? (
                 <Link
@@ -109,23 +140,25 @@ export const SidebarTrabajador = () => {
         </ul>
       </nav>
       
-      {/* Footer / User Profile: Estética de "Conserjería" */}
+      {/* Footer / User Profile */}
       <div className="p-6 border-t border-gray-800 bg-[#0d0f11]">
-        <div className="flex items-center group cursor-pointer">
+        <div className="flex items-center group">
           <div className="relative">
             <div className="w-10 h-10 rounded-full border border-gray-700 flex items-center justify-center bg-gray-900 text-gray-400 group-hover:border-gray-400 transition-colors">
               <User size={18} strokeWidth={1.2} />
             </div>
-            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 border-2 border-[#0d0f11] rounded-full"></span>
+            <span
+              className={`absolute bottom-0 right-0 w-2.5 h-2.5 border-2 border-[#0d0f11] rounded-full transition-colors ${sesionActiva ? 'bg-green-500' : 'bg-gray-600'}`}
+            />
           </div>
-          <div className="ml-4 truncate">
+          <div className="ml-4 truncate flex-1">
             <p className="text-[11px] font-medium text-gray-200 uppercase tracking-wider truncate">
               {(() => {
                 const user = localStorage.getItem('userData');
                 return user ? JSON.parse(user).nombre_completo.split(' ')[0] : 'Trabajador';
               })()}
             </p>
-            <p className="text-[9px] text-gray-500 font-light uppercase tracking-[0.1em] mt-0.5 mt-0.5 truncate">
+            <p className="text-[9px] text-gray-500 font-light uppercase tracking-[0.1em] mt-0.5 truncate">
               {(() => {
                 const sede = localStorage.getItem('sedeActiva');
                 return sede ? JSON.parse(sede).nombre_sede : 'Sede Principal';
@@ -133,6 +166,27 @@ export const SidebarTrabajador = () => {
             </p>
           </div>
         </div>
+
+        {/* Toggle disponible — solo para vendedores */}
+        {esVendedor && (
+          <button
+            onClick={toggleSesion}
+            className={`mt-4 w-full flex items-center justify-between px-3 py-2 rounded text-[11px] uppercase tracking-widest transition-colors ${
+              sesionActiva
+                ? 'bg-green-900/30 text-green-400 border border-green-700/40 hover:bg-green-900/50'
+                : 'bg-gray-800/50 text-gray-500 border border-gray-700/40 hover:bg-gray-800'
+            }`}
+          >
+            <span>{sesionActiva ? 'Disponible' : 'No disponible'}</span>
+            <span
+              className={`w-7 h-4 rounded-full relative transition-colors ${sesionActiva ? 'bg-green-500' : 'bg-gray-600'}`}
+            >
+              <span
+                className={`absolute top-0.5 w-3 h-3 bg-white rounded-full shadow transition-all ${sesionActiva ? 'left-3.5' : 'left-0.5'}`}
+              />
+            </span>
+          </button>
+        )}
       </div>
     </div>
   );

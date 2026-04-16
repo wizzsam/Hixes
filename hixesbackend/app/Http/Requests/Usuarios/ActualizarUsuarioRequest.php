@@ -17,7 +17,8 @@ class ActualizarUsuarioRequest extends FormRequest
         $usuarioId = $this->route('id');
 
         return [
-            'rol_id'          => 'sometimes|integer|exists:roles,id',
+            'rol_ids'         => 'sometimes|array|min:1',
+            'rol_ids.*'       => 'integer|exists:roles,id',
             'nombre_completo' => 'sometimes|string|max:255',
             'correo'          => [
                 'sometimes',
@@ -36,10 +37,11 @@ class ActualizarUsuarioRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'correo.unique' => 'El correo ingresado ya está siendo usado por otro usuario.',
-            'correo.email' => 'El correo debe ser válido.',
-            'rol_id.exists' => 'El rol seleccionado no es válido.',
-            'empresa_id.exists' => 'La empresa seleccionada no es válida.',
+            'correo.unique'    => 'El correo ingresado ya está siendo usado por otro usuario.',
+            'correo.email'     => 'El correo debe ser válido.',
+            'rol_ids.min'      => 'Debe asignar al menos un rol.',
+            'rol_ids.*.exists' => 'Uno de los roles seleccionados no es válido.',
+            'empresa_id.exists'=> 'La empresa seleccionada no es válida.',
         ];
     }
 }

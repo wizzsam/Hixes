@@ -5,6 +5,8 @@ import {
     TrendingUp,
     BarChart3,
     Blocks,
+    Bell,
+    Megaphone,
     type LucideIcon
 } from 'lucide-react';
 
@@ -69,5 +71,20 @@ export const menuItems: MenuItem[] = [
         titulo: 'Servicios',
         link: '/administrator/servicios',
         icon: Blocks
+    },
+    {
+        titulo: 'Pipelines',
+        icon: Blocks,
+        link: '/administrator/pipelines'
+    },
+    {
+        titulo: 'Recordatorios',
+        icon: Bell,
+        link: '/administrator/recordatorios-cashback'
+    },
+    {
+        titulo: 'Campañas',
+        icon: Megaphone,
+        link: '/administrator/campanas'
     }
 ];

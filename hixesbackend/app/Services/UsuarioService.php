@@ -31,7 +31,8 @@ class UsuarioService
     public function listarAdministradores(): Collection
     {
         return $this->usuarioRepository->obtenerTodos()->filter(function ($usuario) {
-            return in_array($usuario->rol_id, [1, 2]); // Ejemplo: 1=Super Admin, 2=Admin Empresa
+            return $usuario->roles->contains('id', 1) || $usuario->roles->contains('id', 2)
+                || in_array($usuario->rol_id, [1, 2]);
         })->values();
     }
 

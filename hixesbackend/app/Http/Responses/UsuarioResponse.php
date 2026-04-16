@@ -42,10 +42,15 @@ class UsuarioResponse
 
     private static function format($usuario): array
     {
+        $roles = $usuario->relationLoaded('roles')
+            ? $usuario->roles->map(fn($r) => ['id' => $r->id, 'nombre_rol' => $r->nombre_rol])->values()->toArray()
+            : ($usuario->rol ? [['id' => $usuario->rol->id, 'nombre_rol' => $usuario->rol->nombre_rol]] : []);
+
         return [
             'id_usuario'      => $usuario->id_usuario,
             'rol_id'          => $usuario->rol_id,
-            'nombre_rol'      => $usuario->rol->nombre_rol ?? null,
+            'nombre_rol'      => $roles[0]['nombre_rol'] ?? null,
+            'roles'           => $roles,
             'nombre_completo' => $usuario->nombre_completo,
             'correo'          => $usuario->correo,
             'empresa_id'      => $usuario->empresa_id,

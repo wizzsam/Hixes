@@ -10,7 +10,7 @@ export const AdminLayout = () => {
 
   const handleLogout = async () => {
     try {
-      // Invalida el token en el backend
+    
       await logoutAuth();
     } catch (e) {
       console.error(e);

@@ -11,6 +11,16 @@ use App\Http\Controllers\ClienteController;
 use App\Http\Controllers\NivelController;
 use App\Http\Controllers\BonoWalletController;
 use App\Http\Controllers\ServicioController;
+use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\OportunidadController;
+use App\Http\Controllers\TareaController;
+use App\Http\Controllers\CrmEtiquetaController;
+use App\Http\Controllers\PipelineEtapaController;
+use App\Http\Controllers\ReporteController;
+use App\Http\Controllers\CrmAsignacionController;
+use App\Http\Controllers\VendedorSesionController;
+use App\Http\Controllers\RecordatorioCashbackController;
+use App\Http\Controllers\CampanaController;
 
 // 1. Manejar solicitudes OPTIONS para CORS (Se queda al inicio)
 Route::options('{any}', function () {
@@ -26,6 +36,9 @@ Route::options('{any}', function () {
 Route::prefix('auth')->group(function () {
     Route::post('/login', [AuthController::class, 'login']);
 });
+
+Route::get('/test-whatsapp', [WhatsAppController::class, 'sendTestMessage']);
+Route::post('/whatsapp/webhook', [WhatsAppController::class, 'receiveMessage']);
 
 // 3. Rutas públicas (sin JWT) para el formulario de registro de clientes
 Route::get('/sedes/publicas', [\App\Http\Controllers\SedeController::class, 'obtenerPublicas']);
@@ -90,6 +103,8 @@ Route::middleware(['force.json', \App\Http\Middleware\JWTAuthMiddleware::class])
         Route::get('/{id}', [ClienteController::class, 'show']);
         Route::put('/{id}', [ClienteController::class, 'update']);
         Route::patch('/{id}/estado', [ClienteController::class, 'toggleEstado']);
+        Route::patch('/{id}/beneficios', [ClienteController::class, 'habilitarBeneficios']);
+        Route::patch('/{id}/beneficios/deshabilitar', [ClienteController::class, 'deshabilitarBeneficios']);
         Route::post('/{id}/consumo', [ClienteController::class, 'registrarConsumo']);
         Route::post('/{id}/wallet', [ClienteController::class, 'recargarWallet']);
         Route::post('/{id}/pagar', [ClienteController::class, 'pagarConSaldo']);
@@ -122,6 +137,114 @@ Route::middleware(['force.json', \App\Http\Middleware\JWTAuthMiddleware::class])
         Route::put('/{id}', [ServicioController::class, 'actualizarServicio']);
         Route::patch('/{id}/estado', [ServicioController::class, 'cambiarEstadoServicio']);
         Route::delete('/{id}', [ServicioController::class, 'eliminarServicio']);
+    });
+
+    // ─── OPORTUNIDADES (KANBAN CRM) ────────────────────────────────────────────
+    Route::prefix('oportunidades')->group(function () {
+        Route::get('/',                      [OportunidadController::class, 'index']);
+        Route::post('/',                     [OportunidadController::class, 'store']);
+        Route::patch('/{id}/etapa',          [OportunidadController::class, 'updateEtapa']);
+        Route::post('/{id}/etapa-archivos',  [OportunidadController::class, 'updateEtapaConArchivos']);
+        Route::patch('/{id}/estado',         [OportunidadController::class, 'updateEstado']);
+        Route::get('/{id}/historial',        [OportunidadController::class, 'historial']);
+    });
+
+    // ─── REPORTES ──────────────────────────────────────────────────────────────
+    Route::prefix('reportes')->group(function () {
+        Route::get('/oportunidades', [ReporteController::class, 'oportunidades']);
+    });
+
+    Route::patch('/clientes/{id}/contacto', [OportunidadController::class, 'updateClienteContacto']);
+
+    // ─── TAREAS (CRM) ─────────────────────────────────────────────────────────
+    Route::prefix('tareas')->group(function () {
+        Route::get('/',              [TareaController::class, 'index']);
+        Route::post('/',             [TareaController::class, 'store']);
+        Route::patch('/{id}/estado', [TareaController::class, 'updateEstado']);
+        Route::delete('/{id}',       [TareaController::class, 'destroy']);
+    });
+
+    // ─── WHATSAPP CRM ──────────────────────────────────────────────────────────
+    // TODO[WS-PROD] Cuando migres a Laravel Reverb:
+    //   - Elimina GET /whatsapp/conversations y GET /whatsapp/messages (ya no se pollea)
+    //   - El frontend escuchará el canal "whatsapp" con Laravel Echo
+    //   - Conserva POST /reply y POST /mark-read/{phone}
+    Route::prefix('whatsapp')->group(function () {
+        Route::get('/conversations',        [WhatsAppController::class, 'getConversations']);
+        Route::get('/messages',             [WhatsAppController::class, 'getMessagesByPhone']);
+        Route::post('/reply',               [WhatsAppController::class, 'replyMessage']);
+        Route::post('/reply-media',         [WhatsAppController::class, 'replyMedia']);
+        Route::post('/mark-read/{phone}',   [WhatsAppController::class, 'markAsRead'])
+            ->where('phone', '.*');
+    });
+
+    // ─── PIPELINE ETAPAS (KANBAN) ──────────────────────────────────────────────
+    Route::prefix('pipeline-etapas')->group(function () {
+        Route::get('/',                 [PipelineEtapaController::class, 'index']);
+        Route::post('/',                [PipelineEtapaController::class, 'store']);
+        Route::patch('/{id}',           [PipelineEtapaController::class, 'update']);
+        Route::patch('/{id}/activo',    [PipelineEtapaController::class, 'toggleActivo']);
+        Route::post('/reordenar',       [PipelineEtapaController::class, 'reordenar']);
+        Route::delete('/{id}',          [PipelineEtapaController::class, 'destroy']);
+    });
+
+    // ─── CRM ETIQUETAS ─────────────────────────────────────────────────────────
+    Route::prefix('crm')->group(function () {        Route::get('/etiquetas',                          [CrmEtiquetaController::class, 'index']);
+        Route::post('/etiquetas',                         [CrmEtiquetaController::class, 'store']);
+        Route::put('/etiquetas/{id}',                     [CrmEtiquetaController::class, 'update']);
+        Route::delete('/etiquetas/{id}',                  [CrmEtiquetaController::class, 'destroy']);
+
+        Route::get('/conversacion-etiquetas',             [CrmEtiquetaController::class, 'asignaciones']);
+        Route::post('/conversacion-etiquetas',            [CrmEtiquetaController::class, 'asignar']);
+        Route::delete('/conversacion-etiquetas/{id}',     [CrmEtiquetaController::class, 'desasignar']);
+
+        // ─── Asignaciones de chat ───────────────────────────────────────────
+        Route::get('/asignaciones',                       [CrmAsignacionController::class, 'index']);
+        Route::get('/mi-asignacion',                      [CrmAsignacionController::class, 'miAsignacion']);
+        Route::delete('/asignaciones/{phone}',            [CrmAsignacionController::class, 'liberar'])
+            ->where('phone', '.*');
+        Route::post('/asignaciones/liberar-por-oportunidad', [CrmAsignacionController::class, 'liberarPorOportunidad']);
+        Route::post('/asignaciones/transferir',              [CrmAsignacionController::class, 'transferir']);
+    });
+
+    // ─── VENDEDOR SESIÓN ────────────────────────────────────────────────────────
+    Route::prefix('vendedor')->group(function () {
+        Route::get('/sesion',  [VendedorSesionController::class, 'estado']);
+        Route::post('/sesion', [VendedorSesionController::class, 'toggle']);
+    });
+
+    // ─── VENDEDORES DISPONIBLES ────────────────────────────────────────────────
+    Route::get('/vendedores/disponibles', [CrmAsignacionController::class, 'vendedoresDisponibles']);
+
+    // ─── RECORDATORIOS DE CASHBACK ─────────────────────────────────────────────
+    Route::prefix('recordatorios-cashback')->group(function () {
+        Route::get('/',              [RecordatorioCashbackController::class, 'index']);
+        Route::post('/',             [RecordatorioCashbackController::class, 'store']);
+        Route::put('/{id}',          [RecordatorioCashbackController::class, 'update']);
+        Route::patch('/{id}/activo', [RecordatorioCashbackController::class, 'toggleActivo']);
+        Route::delete('/{id}',       [RecordatorioCashbackController::class, 'destroy']);
+    });
+
+    // ─── CAMPAÑAS ──────────────────────────────────────────────────────────────
+    Route::prefix('campanas')->group(function () {
+        // CRUD campañas
+        Route::get('/',        [CampanaController::class, 'index']);
+        Route::post('/',       [CampanaController::class, 'store']);
+        Route::get('/{id}',    [CampanaController::class, 'show']);
+        Route::put('/{id}',    [CampanaController::class, 'update']);
+        Route::delete('/{id}', [CampanaController::class, 'destroy']);
+
+        // Etapas de una campaña
+        Route::get('/{campanaId}/etapas',                 [CampanaController::class, 'etapas']);
+        Route::post('/{campanaId}/etapas',                [CampanaController::class, 'storeEtapa']);
+        Route::put('/{campanaId}/etapas/{etapaId}',       [CampanaController::class, 'updateEtapa']);
+        Route::delete('/{campanaId}/etapas/{etapaId}',    [CampanaController::class, 'destroyEtapa']);
+
+        // Clientes en la campaña (kanban)
+        Route::get('/{id}/clientes',                              [CampanaController::class, 'clientes']);
+        Route::post('/{id}/clientes',                             [CampanaController::class, 'agregarCliente']);
+        Route::delete('/{id}/clientes/{clienteId}',               [CampanaController::class, 'removerCliente']);
+        Route::patch('/{id}/clientes/{clienteId}/etapa',          [CampanaController::class, 'moverEtapa']);
     });
 
 });

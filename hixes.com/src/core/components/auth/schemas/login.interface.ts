@@ -13,6 +13,7 @@ export interface UsuarioInfo {
     nombre_empresa: string | null;
     sede_id: number | null;
     nombre_sede: string | null;
+    roles?: { id: number; nombre_rol: string }[];
 }
 
 export interface LoginResponse {

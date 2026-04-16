@@ -42,7 +42,7 @@ export default function UsuariosAdmin() {
         id_usuario: usuario.id_usuario,
         nombre_completo: usuario.nombre_completo,
         correo: usuario.correo,
-        rol_id: usuario.rol_id,
+        rol_ids: usuario.roles?.map(r => r.id) ?? (usuario.rol_id ? [usuario.rol_id] : [])?.map(r => r.id) ?? (usuario.rol_id ? [usuario.rol_id] : []),
         empresa_id: usuario.empresa_id,
         sede_ids: usuario.sedes?.map(s => s.id) ?? [],
         estado: usuario.estado ? 1 : 0,
@@ -149,11 +149,13 @@ export default function UsuariosAdmin() {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <Shield className="w-4 h-4 mr-2 text-indigo-400" />
-                        <span className="text-xs font-semibold px-2 py-1 rounded-md bg-indigo-50 text-indigo-700">
-                          {u.nombre_rol || 'Usuario'}
-                        </span>
+                      <div className="flex flex-wrap gap-1 items-center">
+                        <Shield className="w-4 h-4 text-indigo-400 shrink-0" />
+                        {(u.roles?.length ? u.roles : u.nombre_rol ? [{ id: u.rol_id, nombre_rol: u.nombre_rol }] : []).map(r => (
+                          <span key={r.id} className="text-xs font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700">
+                            {r.nombre_rol}
+                          </span>
+                        ))}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

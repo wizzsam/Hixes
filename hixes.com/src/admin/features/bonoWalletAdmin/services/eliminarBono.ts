@@ -1,4 +1,4 @@
-import { axiosWithoutMultipart } from '../../../../api/axiosInstance';
+import { axiosAuth } from '../../../../api/axiosInstance';
 
 /**
  * Elimina una escala de bono permanentemente.
@@ -7,7 +7,7 @@ import { axiosWithoutMultipart } from '../../../../api/axiosInstance';
 export const eliminarBono = async (id: number): Promise<boolean> => {
     try {
         // Usamos el ID para la ruta 'bonos/{id}' definida en tu api.php
-        const response = await axiosWithoutMultipart.delete(`bonos/${id}`);
+        const response = await axiosAuth.delete(`bonos/${id}`);
         
         // Retornamos true si el backend confirma el éxito
         return response.data.success;

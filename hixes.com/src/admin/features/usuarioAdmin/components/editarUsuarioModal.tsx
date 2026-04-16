@@ -21,7 +21,7 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
     nombre_completo: '',
     correo: '',
     password: '',
-    rol_id: 2,
+    rol_ids: [],
     empresa_id: null,
     sede_ids: [],
     estado: 1,
@@ -49,7 +49,7 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
             nombre_completo: usuarioData.nombre_completo || '',
             correo: usuarioData.correo || '',
             password: '',
-            rol_id: usuarioData.rol_id,
+            rol_ids: usuarioData.rol_ids ?? [],
             empresa_id: usuarioData.empresa_id,
             sede_ids: usuarioData.sede_ids ?? [],
             estado: usuarioData.estado ?? 1,
@@ -59,7 +59,7 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
             nombre_completo: '',
             correo: '',
             password: '',
-            rol_id: 2,
+            rol_ids: [],
             empresa_id: null,
             sede_ids: [],
             estado: 1,
@@ -93,6 +93,15 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
     }));
   };
 
+  const toggleRol = (id: number) => {
+    setFormData(prev => ({
+      ...prev,
+      rol_ids: prev.rol_ids.includes(id)
+        ? prev.rol_ids.filter(r => r !== id)
+        : [...prev.rol_ids, id],
+    }));
+  };
+
   const sedesFiltradas = sedes.filter(s =>
     s.nombre_sede.toLowerCase().includes(busquedaSede.toLowerCase())
   );
@@ -112,7 +121,7 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
 
     setFormData(prev => ({
       ...prev,
-      [name]: (name === 'rol_id' || name === 'estado') ? parseInt(value) : value,
+      [name]: name === 'estado' ? parseInt(value) : value,
     }));
   };
 
@@ -123,7 +132,7 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!formData.nombre_completo || !formData.correo || !formData.rol_id) {
+    if (!formData.nombre_completo || !formData.correo || formData.rol_ids.length === 0) {
         toast.error('Por favor, completa todos los campos obligatorios (*)');
         return;
     }
@@ -136,7 +145,7 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
       const dataToUpdate: any = {
         nombre_completo: formData.nombre_completo,
         correo: formData.correo,
-        rol_id: formData.rol_id,
+        rol_ids: formData.rol_ids,
         empresa_id: formData.empresa_id,
         sede_ids: formData.sede_ids,
       };
@@ -278,27 +287,33 @@ export default function EditarUsuarioModal({ isOpen, onClose, usuarioData, onUsu
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                            <label htmlFor="rol_id" className="block text-sm font-medium text-slate-700">
-                                Rol del Sistema <span className="text-red-500">*</span>
+                            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+                                Rol(es) del Sistema <span className="text-red-500">*</span>
                             </label>
-                            <div className="relative mt-1.5">
-                                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
-                                    <Shield className="w-5 h-5 text-slate-400" />
+                            {roles.length === 0 ? (
+                                <div className="flex items-center gap-2 h-10 text-slate-400 text-sm"><Loader2 className="w-4 h-4 animate-spin" /> Cargando roles...</div>
+                            ) : (
+                                <div className="border border-slate-200 rounded-lg overflow-hidden">
+                                    <div className="max-h-36 overflow-y-auto divide-y divide-slate-100">
+                                        {roles.map(r => {
+                                            const checked = formData.rol_ids.includes(r.id);
+                                            return (
+                                                <label key={r.id} className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${checked ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}>
+                                                    <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${checked ? 'bg-indigo-600 border-indigo-600' : 'border-slate-300'}`}>
+                                                        {checked && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                                                    </div>
+                                                    <Shield className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                                    <span className="text-sm text-slate-700">{r.nombre_rol}</span>
+                                                    <input type="checkbox" className="sr-only" checked={checked} onChange={() => toggleRol(r.id)} />
+                                                </label>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
-                                <select
-                                    name="rol_id"
-                                    id="rol_id"
-                                    value={formData.rol_id}
-                                    onChange={handleInputChange}
-                                    required
-                                    className="w-full pl-10 px-4 py-2.5 text-sm border rounded-lg border-slate-300 focus:ring-2 focus:ring-orange-200 focus:border-orange-500 transition-colors bg-white appearance-none"
-                                >
-                                    {roles.length === 0 && <option value="">Cargando roles...</option>}
-                                    {roles.map(r => (
-                                        <option key={r.id} value={r.id}>{r.nombre_rol}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            )}
+                            {formData.rol_ids.length > 0 && (
+                                <p className="mt-1 text-xs text-indigo-600 font-medium">{formData.rol_ids.length} rol(es) seleccionado(s)</p>
+                            )}
                         </div>
 
                         <div>

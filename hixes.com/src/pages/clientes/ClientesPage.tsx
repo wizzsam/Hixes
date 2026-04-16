@@ -28,6 +28,7 @@ export const ClientesPage = () => {
 
   const filtrados = useMemo(() => {
     let lista = clientes.filter(c => {
+      if (!c.con_beneficios) return false;  // Solo clientes con beneficios habilitados
       const coincideBusqueda =
         c.nombre_completo.toLowerCase().includes(busqueda.toLowerCase()) ||
         c.dni.includes(busqueda) ||
@@ -168,7 +169,7 @@ export const ClientesPage = () => {
           </button>
           <button
             onClick={() => setIsModalOpen(true)}
-            className="flex-[2] md:flex-none flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-600/20 focus:ring-2 focus:ring-blue-500/50 whitespace-nowrap"
+            className="flex-2 md:flex-none flex justify-center items-center bg-blue-600 hover:bg-blue-700 text-white px-4 md:px-5 py-2.5 rounded-xl text-sm font-semibold transition-colors shadow-sm shadow-blue-600/20 focus:ring-2 focus:ring-blue-500/50 whitespace-nowrap"
           >
             + Nuevo Cliente
           </button>
@@ -256,7 +257,6 @@ export const ClientesPage = () => {
               <tbody className="divide-y divide-slate-100">
                 {paginados.map(cliente => {
                   const nivel = getNivelActual(cliente.consumo_acumulado);
-                  if (!nivel) return null;
                   const inactivo = !cliente.estado;
 
                   return (
@@ -310,10 +310,14 @@ export const ClientesPage = () => {
 
                       {/* Nivel */}
                       <td className="px-6 py-4">
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-white text-[10px] font-black rounded-lg uppercase tracking-wider">
-                          <span>{nivel.icono}</span>
-                          <span>{nivel.nombre}</span>
-                        </span>
+                        {nivel ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-slate-900 text-white text-[10px] font-black rounded-lg uppercase tracking-wider">
+                            <span>{nivel.icono}</span>
+                            <span>{nivel.nombre}</span>
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-300">Sin nivel</span>
+                        )}
                       </td>
 
                       {/* Wallet */}
@@ -412,7 +416,7 @@ export const ClientesPage = () => {
       <NuevoClienteModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
-        onClienteCreado={agregarCliente}
+        onClienteCreado={async (data) => agregarCliente({ ...data, con_beneficios: true })}
       />
 
       {/* Modal editar cliente */}

@@ -38,9 +38,12 @@ export const LoginForm = () => {
       }
 
       // Redirección según rol
+      const rolesPortal = ['ADMIN_EMPRESA', 'TRABAJADOR', 'VENTAS'];
+      const rolesUsuario = response.user.roles?.map(r => r.nombre_rol) ?? (nombre_rol ? [nombre_rol] : []);
+
       if (nombre_rol === 'SUPER_ADMIN') {
         navigate('/administrator');
-      } else if (nombre_rol === 'ADMIN_EMPRESA' || nombre_rol === 'TRABAJADOR') {
+      } else if (rolesUsuario.some(r => rolesPortal.includes(r))) {
         navigate('/portal');
       } else {
         setError('Acceso denegado. No tienes permisos para ingresar.');

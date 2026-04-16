@@ -9,7 +9,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('transacciones', function (Blueprint $table) {
-            $table->boolean('consumido')->default(false)->after('expirado');
+            // Usamos ->after('expirado') solo si esa columna ya existe
+            // (puede faltar si la migración anterior quedó incompleta)
+            if (Schema::hasColumn('transacciones', 'expirado')) {
+                $table->boolean('consumido')->default(false)->after('expirado');
+            } else {
+                $table->boolean('consumido')->default(false);
+            }
         });
     }
 

@@ -1,12 +1,16 @@
 import { useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import { SidebarTrabajador } from './SidebarTrabajador';
 import { LogOut, User, Menu } from 'lucide-react';
 import { Toaster } from 'sonner';
 import { logoutAuth } from '../../core/components/auth/services/logout';
+import NotificacionesCampana from './NotificacionesCampana';
 
 export const TrabajadorLayout = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const isFullPage = location.pathname.startsWith('/trabajador/kanbam') ||
+    location.pathname.startsWith('/trabajador/calendario');
   const userStr = localStorage.getItem('userData');
   const userData = userStr ? JSON.parse(userStr) : null;
   const userName = userData?.nombre || 'Mi Perfil';
@@ -63,7 +67,9 @@ export const TrabajadorLayout = () => {
               </div>
             </div>
             
-            <div className="flex items-center space-x-2 md:space-x-6">
+            <div className="flex items-center space-x-2 md:space-x-4">
+              <NotificacionesCampana />
+
               <div className="hidden md:flex items-center space-x-3 bg-slate-50 hover:bg-slate-100 transition-colors px-4 py-2.5 rounded-2xl border border-slate-200/80 shadow-sm cursor-pointer">
                 <div className="bg-white p-1.5 rounded-full shadow-sm ring-1 ring-slate-200">
                   <User className="w-4 h-4 text-blue-600" />
@@ -84,10 +90,16 @@ export const TrabajadorLayout = () => {
         </header>
         
         {/* Usamos un degradado sutil en el fondo del main para evitar que se vea completamente blanco/plano */}
-        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gradient-to-b from-[#F8FAFC] to-[#F1F5F9] scroll-smooth">
-          <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 h-full">
-            <Outlet />
-          </div>
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-linear-to-b from-[#F8FAFC] to-[#F1F5F9] scroll-smooth">
+          {isFullPage ? (
+            <div className="h-full">
+              <Outlet />
+            </div>
+          ) : (
+            <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-8 h-full">
+              <Outlet />
+            </div>
+          )}
         </main>
       </div>
       <Toaster position="top-right" richColors closeButton />

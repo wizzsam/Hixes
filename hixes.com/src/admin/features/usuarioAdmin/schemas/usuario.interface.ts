@@ -3,10 +3,16 @@ export interface SedeSimpleI {
     nombre_sede: string;
 }
 
+export interface RolSimpleI {
+    id: number;
+    nombre_rol: string;
+}
+
 export interface Usuario {
     id_usuario: number;
     rol_id: number;
     nombre_rol: string;
+    roles: RolSimpleI[];
     nombre_completo: string;
     correo: string;
     empresa_id: number | null;
